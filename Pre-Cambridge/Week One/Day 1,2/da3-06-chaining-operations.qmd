@@ -1,0 +1,352 @@
+---
+title: Chaining operations
+---
+
+::: {.callout-tip}
+#### Learning objectives
+
+- Learn how to chain operations together.
+:::
+
+## Context
+
+In the section above we performed several operations on a single data set. Often there is a sequence to this, where the output of one operation gets fed into the next. We can simplify this by chaining commands.
+
+## Section setup {#setup_chaining_operations}
+
+::: {.panel-tabset group="language"}
+## R
+
+We'll continue this section with the script named `03_session`. If needed, add the following code to the top of your script and run it.
+
+```{r}
+#| message: false
+# A collection of R packages designed for data science
+library(tidyverse)
+
+surveys <- read_csv("data/surveys.csv")
+```
+
+## Python
+
+We'll continue this section with the Notebook named `03_session`. Add the following code to the first cell and run it.
+
+```{python}
+# A Python data analysis and manipulation tool
+import pandas as pd
+
+# Python equivalent of `ggplot2`
+from plotnine import *
+
+surveys = pd.read_csv("data/surveys.csv")
+```
+
+:::
+
+## Pipes or chaining commands
+
+So far, we've used single operations when we were manipulating our data. For example, we can select columns with:
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| eval: false
+select(surveys, record_id, hindfoot_length)
+```
+
+Let's say we wanted combine that with creating a new column, for example hindfoot length in centimeters.
+
+We would have to do the following:
+
+```{r}
+# grab the relevant columns and store in a new object
+subset_surveys <- select(surveys, record_id, hindfoot_length)
+
+# create the new column
+mutate(subset_surveys, hindfoot_length_cm = hindfoot_length / 10)
+```
+
+We had to create a new *object* (here, called `subset_surveys`) to store the intermediate data we were interested in, and then continue with creating the new column.
+
+This clutters up your computer's memory rather quickly when dealing with lots of data. A much better way is that we **pipe** or **chain** one after the other. To do this, we *start with the data* and use a pipe symbol (`|>` or `%>%`) as follows:
+
+```{r}
+surveys |> 
+  select(record_id, hindfoot_length) |>
+  mutate(hindfoot_length_cm = hindfoot_length / 10)
+```
+
+An easy way of remembering what the pipe does is to replace (in your head) the pipe symbol with the phrase "and then...".
+
+So, we `select()` the `record_id` and `hindfoot_length` columns *and then* use `mutate()` to create a new column called `hindfoot_length_cm`.
+
+::: {.callout-note}
+## Which pipe symbol do I use?
+
+You'll find that people use two pipe symbols quite interchangeably in R: the `|>` pipe (native, built-in R) and `%>%` from the `magrittr` package.
+
+The native, built-in pipe is a rather new addition, since version 4.1. It is slightly different in its behaviour than the `%>%` pipe (if you want to know more, see [here](https://ivelasq.rbind.io/blog/understanding-the-r-pipe/#:~:text=A%20while%20back%2C%20I%20wrote,available%20since%20R%20version%204.1.)), but for most purposes they work the same.
+
+We tend to use the native, built-in pipe throughout the materials. But the `magrittr` pipe works just as well! You can change your preference in RStudio by going to `Tools > Global options > Code` and changing the tickbox enabling/disabling the native pipe operator.
+
+:::
+
+## Python
+
+```{python}
+surveys[["record_id", "hindfoot_length"]].copy()
+```
+
+Let's say we wanted combine that with creating a new column, for example hindfoot length in centimeters.
+
+We would have to do the following:
+
+```{python}
+# select the required columns and store in a new data set
+subset_surveys = surveys[["record_id", "hindfoot_length"]].copy()
+
+# take the new data set and calculate the new column
+subset_surveys["hindfoot_length_cm"] = subset_surveys["hindfoot_length"] / 10
+
+```
+
+We had to create a new *object* (here, called `subset_surveys`) to store the intermediate data we were interested in, and then continue with creating the new column.
+
+This clutters up your computer's memory rather quickly when dealing with lots of data. So, it'd be good if we could **pipe** or **chain** these commands, like we can do in R.
+
+Python does not have an exact equivalent to pipes in R, but you can chain methods in `pandas`, which can make your life a lot easier. Let's explore that a bit further.
+
+In the code below we are using `.loc[:, ["col1", "col2"]]` to select columns. This is a bit more chain-friendly than using `[["col1", "col2"]]` because it also allows filtering (more on this in the next chapter).
+
+```{python}
+(
+  surveys
+  .loc[:, ['record_id', 'hindfoot_length']]
+  .assign(hindfoot_length_cm = lambda df: df["hindfoot_length"] / 10)
+)
+
+```
+
+Here, we do the following:
+
+* `.loc[:, ['record_id', 'hindfoot_length']]` selects the columns you want
+* `.assign(...)` then creates a new column
+* `lambda df` tells `pandas` to compute the new column using the current data frame in the chain
+
+::: {.callout-important}
+## Oh, `lambda`!
+
+**Why Use `lambda` in Pandas `.assign()`?**
+
+In Python, a `lambda` is an **anonymous function** — a quick, in-place function without a name.
+
+**Why is `lambda` important in method chaining?**
+
+This all relates to the evaluation order: `.assign()` evaluates its arguments **before** the previous steps in the chain are fully applied.
+
+So if you reference a column that was renamed or created earlier in the chain, `pandas` won’t find it unless you use `lambda` to delay evaluation.
+
+Using `lambda` in `.assign()` ensures that pandas waits to evaluate the new column **until the DataFrame is fully updated** by the earlier steps.
+
+Suppose we want to:
+
+- Select two columns
+- Create a new column `weight_kg` as `weight_g / 1000`
+
+Without `lambda` — this will raise an error:
+
+```python
+(
+  surveys
+  .loc[:, ["record_id", "weight"]]
+  .assign(weight_kg = surveys["weight_g"] / 1000)  # KeyError: "weight_g"
+)
+```
+:::
+
+::: {.callout-note}
+## Pipe-style packages in Python
+
+There are some `dplyr`-style implementations in Python, that also include a pipe. One is [siuba](https://github.com/machow/siuba) but it does not seem to be actively maintained. Another one is [dfply](https://github.com/kieferk/dfply), which has not been updated for 7 years and counting...
+
+So, rather than being frustrated about this, I suggest we accept the differences between the two languages and move on! :-)
+:::
+
+:::
+
+## Chaining different commands
+
+We can extend this concept a bit further, beyond just the creation of new columns.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+surveys |> 
+  select(record_id, weight) |>  # select columns
+  rename(weight_g = weight) |>  # rename weight
+  head()                        # show the first few rows
+```
+
+## Python
+
+```{python}
+(
+  surveys
+  .loc[:, ['record_id', 'weight']]          # select columns
+  .rename(columns = {'weight': 'weight_g'}) # rename column
+  .head()                                   # show first few rows
+)
+
+```
+
+:::
+
+## Exercises
+
+### Chaining {#sec-exr_chaining}
+
+::: {.callout-exercise #ex-chaining}
+#### Chaining
+
+{{< level 1 >}}
+
+For this exercise we'll be using the data from `data/parasites.csv`.
+
+The `fish_length` variable is the length of the fish measured in centimeters. Do the following:
+
+* select all but the `parasite_count` column
+* rename the `fish_length` column to `fish_length_cm`
+* create a new column that contains the fish length in inches (divide by `2.54`)
+* do all of this in a single chain
+
+::: {.callout-answer collapse="true"}
+
+Load the data, if needed.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| message: false
+parasites <- read_csv("data/parasites.csv")
+```
+
+
+## Python
+
+```{python}
+parasites = pd.read_csv("data/parasites.csv")
+```
+
+:::
+
+Perform chaining operations.
+
+::: {.panel-tabset group="language"}
+## R
+
+We use `select()` to select the columns, `rename()` to rename the `fish_length` column and `mutate()` to create a new column containing the fishlength values in inches.
+
+```{r}
+parasites |> 
+  select(lake, fish_length) |> 
+  rename(fish_length_cm = fish_length) |> 
+  mutate(fish_length_in = fish_length_cm / 2.54)
+```
+
+## Python
+
+We use `.loc` to select the columns, `.rename()` to rename the `fish_length` column and `.assign()` to create the new column containin the fishlength values in inches.
+
+```{python}
+(
+  parasites
+  .loc[:, ["lake", "fish_length"]]
+  .rename(columns = {"fish_length": "fish_length_cm"})
+  .assign(fish_length_in = lambda df: df["fish_length_cm"] / 2.54)
+)
+```
+
+:::
+
+:::
+:::
+
+### Converting dates: `surveys` {#sec-exr_converting_dates}
+
+::::: {.callout-exercise #ex-converting_dates}
+#### Converting dates
+
+{{< level 3 >}}
+
+For this exercise we'll go back to using the data from `data/surveys.csv`.
+
+In our data we have the day, month and year values in separate columns. This is a safe way of storing the data, but when it comes to plotting or working with the data it's useful to have it in a different format.
+
+Create two new columns:
+
+1. `record_date` that contains the full date in the format `yyyy-mm-dd`
+2. `month_abbr` that contains the month abbreviation (e.g. `Jan`, `Feb`, ...)
+3. Do this using chains, so you don't end up needing to save lots of intermediate objects
+
+Feel free to use new packages...
+
+:::: {.callout-answer collapse="true"}
+
+We can do this as follows.
+
+::: {.panel-tabset group="language"}
+## R
+
+In R there is the `lubridate` package, which allows us to manipulate dates efficiently. After installing it, make sure to load it.
+
+* we use `lubridate::make_date()` to create the date column
+* we use the `lubridate::month()` function to create the month label, using abbreviations
+
+```{r}
+library(lubridate)
+
+surveys |> 
+  mutate(record_date = make_date(year, month, day)) |> 
+  mutate(month_abbr = month(month, label = TRUE, abbr = TRUE)) |> 
+  select(record_id, year, month, day, record_date, month_abbr)
+```
+
+
+## Python
+
+We can use some functionality from the `calendar` package, as well as `pandas`.
+
+* we can use `to_datetime()` to convert the `year`, `month` and `day` columns to a date.
+* we can use `calendar.month_abbr` to convert the numeric value of `month` to a month abbreviation
+
+```{python}
+import calendar
+
+surveys = (
+    surveys
+    .assign(record_date = pd.to_datetime(surveys[['year', 'month', 'day']]))
+    .assign(month_abbr = surveys['month'].apply(lambda x: calendar.month_abbr[x]))
+)
+
+```
+
+```{python}
+surveys.head()
+```
+
+:::
+::::
+:::::
+
+## Summary
+
+::: {.callout-tip}
+#### Key points
+
+- In Python we use method chaining, which apply a series of transformations to a `pandas` DataFrame.
+- In R we have dedicated pipe symbols and we can use `|>` (built-in) or `%>%` (via `magrittr` package) to chain operations.
+- Both of these approaches allow us to run multiple lines of code sequentially, simplifying pipelines and making them easier to read.
+:::

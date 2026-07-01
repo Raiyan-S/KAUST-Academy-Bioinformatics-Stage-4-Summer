@@ -1,0 +1,1293 @@
+---
+title: Plotting data
+---
+
+```{r}
+#| echo: false
+#| message: false
+#| results: hide
+library(patchwork)
+```
+
+::: {.callout-tip}
+#### Learning objectives
+
+- Learn to create plots.
+- Be able to build up plots in multiple layers.
+- Make changes to plot colours and other aesthetics.
+- Be able to create sub-panels based on data.
+- Export/save plots to file.
+:::
+
+## Context
+
+We now have a good grasp of how data is commonly structured, with variables in columns and observations in rows. This is the perfect format for visualising data.
+
+## Section setup {#setup_plotting}
+
+::: {.panel-tabset group="language"}
+## R
+
+We'll continue this section with the script named `02_session`. If needed, add the following code to the top of your script and run it.
+
+```{r}
+#| message: false
+# A collection of R packages designed for data science
+library(tidyverse)
+
+surveys <- read_csv("data/surveys.csv")
+```
+
+## Python
+
+We'll continue this section with the Notebook named `02_session`. Add the following code to the first cell and run it.
+
+```{python}
+# A Python data analysis and manipulation tool
+import pandas as pd
+
+# Python equivalent of `ggplot2`
+from plotnine import *
+
+# If using seaborn for plotting
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+surveys = pd.read_csv("data/surveys.csv")
+```
+
+:::
+
+## Introducing plotting
+
+To create a plot we'll need three things:
+
+| | | |
+|------|-------------|--------------------------------|
+| <i class="fa fa-table-list fa-1x"></i> | 1. Data | your data |
+| <i class="fa fa-chart-line fa-1x"></i> | 2. Mapping aesthetics | variables used to create the visual (e.g. x/y data, colours) |
+| <i class="fa fa-chart-column fa-1x"></i> | 3. Specify the type of plot | e.g. scatter plot, boxplot, line graph |
+
+This breakdown of plotting is often associated with R's `ggplot2` package, but the underlying principles of the `gg` (**grammar of graphics**) is a much more universal approach to creating graphs.
+
+The idea is that you consistently build up plots, layer-by-layer. I like the concept, because it creates consistency in our approach - regardless of the language. There is a Python implementation of `ggplot2`, called `plotnine`.
+
+We'll be using these libraries/modules here, but will also show you some examples of other commonly-used plotting packages. You'll probably develop your own preference - this is absolutely fine!
+
+
+### Start plotting
+
+If needed, add and run the code from [Section setup](#setup_plotting).
+
+Here we are using the `surveys` data set. Let's assume that we're interested in the relationship between two variables: `weight` and `hindfoot_length`. We can plot `weight` on the x-axis and `hindfoot_length` on the y-axis.
+
+Since they are both continuous data, a scatter plot would be a good way to represent these data.
+
+So, we need three things: (1) data; (2) mapping of aesthetics and (3) specify the type of plot.
+
+::: {.panel-tabset group="language"}
+## R
+
+We use the `ggplot()` function to do this:
+
+```{r}
+#| warning: false
+#| label: fig-weight_hind_scatter
+#| fig-cap: "Scatterplot of weight vs hindfoot_length"
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point()
+```
+
+## Python
+
+We use the `ggplot()` function to do this. Note that the whole code chunk below is wrapped inside another set of parentheses `( )`. This allows us to break up the code a bit for clarity. Also, the variable names that we're giving to `ggplot()` are inside quotes `" "` - this is different from R, where this is not necessary.
+
+Additionally, if you're running this directly from a Python script, it might not always output the plot inline. To avoid issues with this, we assign the plot to an object `p` and specifically ask Python to display it using `p.show()`.
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_py
+#| fig-cap: "Scatterplot of weight vs hindfoot_length"
+p = (ggplot(data = surveys,
+        mapping = aes(x = "weight", y = "hindfoot_length")) + 
+  geom_point())
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_seaborn
+#| fig-cap: "Scatterplot of weight vs hindfoot_length"
+
+sns.scatterplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length"
+)
+
+plt.title("Scatterplot of weight vs hindfoot_length")
+plt.show()
+```
+
+:::
+
+::: {.callout-note collapse="true"}
+## Pandas equivalent
+
+For simple plots you can also use the built-in plotting functionality from `pandas`. We'll only show this once, because there are so many different ways to plot data that we don't want to clutter the materials. However, it can be useful if you want to have a quick preview of your data. More information on this can be found in the [official documentation](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.plot.html).
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_pandas
+#| fig-cap: "Scatterplot of weight vs hindfoot_length"
+
+surveys.plot(x = "weight", y = "hindfoot_length", kind = "scatter")
+```
+
+:::
+
+:::
+
+Let's unpack that a bit. We specify which data to use with the `data =` argument (our `surveys` data set in this case).
+
+Next, we define what goes onto the `x` and `y` axes, using the `mapping =` argument. This needs a so-called *helper function* `aes()`, which stands for *aesthetics*. Within this helper function we define what goes onto the x-axis (`x =`) and y-axis (`y =`).
+
+Finally, we need to tell it *what kind of plot* we want. Here, we want to use a scatter plot. The type of plot is determined by the `geom_`. This literally gets added to the `ggplot()` function: note the `+` symbol at the end of the line of code.
+
+Most `geom_` functions are logically named. For example, a line graph will be `geom_line()`, a boxplot `geom_boxplot()` etc. The odd one out is the scatter plot, which is `geom_point()`, because we're plotting individual data points.
+
+We don't have to add any information within the `geom_point()` function, because it's taking all it needs from the `ggplot()` function above. More on this later.
+
+### Building up plots
+
+The good thing about `ggplot()` is that it builds up the plot layer-by-layer. We don't even have to provide it with a geometry to start with and it'll still create the outline of a plot. Let's illustrate this with another example, where we plot `hindfoot_length` on the y-axis for each `sex` group.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-weight_hind_scatter_no_geom
+#| fig-cap: "Geometries are needed to visualise the data."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length))
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_no_geom_py
+#| fig-cap: "Geometries are needed to visualise the data."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")))
+
+p.show()
+```
+:::
+
+However, that obviously is not very useful. The nice thing is that we can add multiple layers to a single plot. We have a column `sex` in the data. This contains three possible values:`F` (female),  `M` (male) and `NA` (not recorded).
+
+Let's look at the hindfoot length distribution across these groups.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-sex_hind_scatter
+#| fig-cap: "Scatterplot of hindfoot length for each sex."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_point()
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_scatter_py
+#| fig-cap: "Scatterplot of hindfoot length for each sex."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_point())
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_scatter_seaborn
+#| fig-cap: "Scatterplot of hindfoot length for each sex."
+
+sns.stripplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    jitter = True    # to spread points horizontally like geom_point on a category
+)
+
+plt.title("Hindfoot length by sex")
+plt.show()
+
+```
+
+:::
+
+:::
+
+A lot of the points are overlapping, which makes it a bit hard to see how the data are distributed. We can do something about that (more on that in the next session), but we can also add some summary statistics in the form of a boxplot. We can simply add a layer to the plot that displays the boxes.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-sex_hind_scatter_box
+#| fig-cap: "Scatterplot and boxplot of hindfoot length for each sex."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_point() +
+  geom_boxplot()
+```
+
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_scatter_box_py
+#| fig-cap: "Scatterplot and boxplot of hindfoot length for each sex."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_point() +
+        geom_boxplot())
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_scatter_box_seaborn
+#| fig-cap: "Scatterplot and boxplot of hindfoot length for each sex."
+
+import sys, warnings
+print(sys.version)
+print(warnings.__file__)
+help(warnings.warn)
+
+# boxplot first
+sns.boxplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    showfliers = False  # hide outliers, since we’ll show raw points
+)
+
+# points overlaid
+sns.stripplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    color = "black",  # colour points for contrast
+    jitter = True,    # add jitter to avoid overlap
+    alpha = 0.6       # use transparency for clarity
+)
+
+plt.title("Hindfoot length by sex (points + boxplot)")
+plt.show()
+```
+
+:::
+:::
+
+The layers are added in the order we provide them, so here the boxes are on top of the individual data points. You might want to rearrange that, so that the boxes are *behind* the data.
+
+## Changing plots
+
+Often we want to control other parts of the plot as well. There is a whole range of things we can change about the appearance of a plot - in fact, *anything* in a plot can be changed! Don't try to remember every tiny detail. You might want to change the orientation of the text labels on the x-axis, but a quick search is probably easier than keeping that information in your head!
+
+### Colour
+
+Changing colour is pretty straightforward. We use the `colour =` argument. There are a whole range of default colours available, but we'll go with blue here.
+
+Let's illustrate that using our original `weight` vs `hindfoot_length` scatter plot.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-weight_hind_scatter_blue
+#| fig-cap: "Colouring points by a defined colour."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point(colour = "blue")
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_blue_py
+#| fig-cap: "Colouring points by a defined colour."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "weight", y = "hindfoot_length")) +
+        geom_point(colour = "blue"))
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_scatter_blue_seaborn
+#| fig-cap: "Colouring points by a defined colour."
+
+sns.scatterplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    color = "blue"   # fixed color for all points
+)
+
+plt.title("Scatterplot of weight vs hindfoot_length (blue points)")
+plt.show()
+```
+
+:::
+
+:::
+
+### Fill
+
+The `fill =` argument is used to *fill* surface areas. It doesn't work on individual points, but instead on geometries that have an area, such as a boxplot, bar chart or violin plot.
+
+We can't create a boxplot with two continuous variables, so we'll plot `hindfoot_length` for the different `sex` groups again. We fill the boxes using magenta.
+
+**What happens if you use `colour = "magenta"` instead?**
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-sex_hind_boxplot_fill
+#| fig-cap: "Geometries with surfaces use `fill` for colours."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_boxplot(fill = "magenta")
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_boxplot_fill_py
+#| fig-cap: "Geometries with surfaces use `fill` for colours."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_boxplot(fill = "magenta"))
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-sex_hind_boxplot_fill_seaborn
+#| fig-cap: "Seaborn uses `color` for fill colours."
+
+sns.boxplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    color = "magenta"   # sets the fill color of the box
+)
+
+plt.title("Hindfoot length by sex (magenta boxplot)")
+plt.show()
+
+```
+
+:::
+:::
+
+### Aesthetics based on data
+
+Manually assigning colours can be very helpful, but quite often we want to colour data based on *another variable*. For example, we might be interested in the potential relationship between weight and hindfoot length, but are wondering if this looks different across the sex groups.
+
+In that case, we'd want to colour all the data points belonging to the male group different to those of the female group. The same goes for the missing values.
+
+The way we can do this is by adding the `sex` variable *inside* the aesthetics.
+
+::: {.callout-note}
+## Within `aes()` or not?
+
+An easy way of remembering where your `colour =` or `fill =` argument goes is to ask: is the colour based on the data or not? If the answer is yes, it goes *inside* the aesthetics. If not, then outside.
+
+:::
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-weight_hind_fill_sex
+#| fig-cap: "Colouring data based on another variable."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length, colour = sex)) +
+  geom_point()
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_fill_sex_py
+#| fig-cap: "Colouring data based on another variable."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "weight", y = "hindfoot_length", colour = "sex")) +
+        geom_point())
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-weight_hind_fill_sex_seaborn
+#| fig-cap: "Colouring data based on another variable."
+
+sns.scatterplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    hue = "sex"   # map colors to sex
+)
+
+plt.title("Scatterplot of weight vs hindfoot_length by sex")
+plt.show()
+```
+
+:::
+
+:::
+
+### Dealing with overlap
+
+In the example of hindfoot length for the different sex groups we noticed that there is quite a bit of overlap in the data. One of the ways of dealing with this is by adding a little bit of *jitter*. What that does is add a tiny bit of random noise to the data, to avoid overlap.
+
+We can do this with the `geom_jitter()` geometry. The amount of jitter that is added can be regulated with the `width =` argument, as a fraction of the available width. Compare the differences in the following plots.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-avoiding_overlap_jitter
+#| fig-cap: "Adding jitter to the data can help with overlapping data."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_jitter()
+```
+
+```{r}
+#| warning: false
+#| label: fig-avoiding_overlap_jitter_width
+#| fig-cap: "You can control the amount of jitter."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_jitter(width = 0.1)
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_py
+#| fig-cap: "Adding jitter to the data can help with overlapping data."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_jitter())
+
+p.show()
+```
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_width_py
+#| fig-cap: "You can control the amount of jitter."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_jitter(width = 0.1))
+
+p.show()
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_seaborn
+#| fig-cap: "Adding jitter to the data can help with overlapping data."
+
+sns.stripplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    jitter = True,    # add horizontal jitter
+    alpha = 0.6       # add transparency
+)
+
+plt.title("Hindfoot length by sex (jittered points)")
+plt.show()
+```
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_width_seaborn
+#| fig-cap: "You can control the amount of jitter."
+
+sns.stripplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    jitter = 0.05,   # controls the amount of horizontal jitter
+    alpha = 0.6     # add transparency
+)
+
+plt.title("Hindfoot length by sex (jitter = 0.05)")
+plt.show()
+
+```
+:::
+
+### Transparency
+
+Even with jittering the data, we still have quite some overlap. There probably is a limit to what we can do about it, but adding some transparency can also help. Here, where there is more overlap, areas will appear darker whereas less overlap will appear lighter.
+
+We control this with the `alpha =` argument. Again, this takes a value between 0 (full transparency) and 1 (no transparency).
+
+Compare the following plot with the previous ones.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-avoiding_overlap_jitter_alpha
+#| fig-cap: "You can also use transparency to deal with overlapping data."
+ggplot(data = surveys,
+       mapping = aes(x = sex, y = hindfoot_length)) +
+  geom_jitter(width = 0.1, alpha = 0.4)
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_alpha_py
+#| fig-cap: "You can also use transparency to deal with overlapping data."
+p = (ggplot(data = surveys,
+        mapping = aes(x = "sex", y = "hindfoot_length")) +
+        geom_jitter(width = 0.1, alpha = 0.4))
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-avoiding_overlap_jitter_alpha_seaborn
+#| fig-cap: "You can also use transparency to deal with overlapping data."
+
+sns.stripplot(
+    data = surveys,
+    x = "sex",
+    y = "hindfoot_length",
+    jitter = 0.1,     # horizontal jitter
+    alpha = 0.4       # transparency of 40%
+)
+
+plt.title("Hindfoot length by sex (jitter=0.1, alpha=0.4)")
+plt.show()
+
+```
+
+:::
+:::
+
+### Point size and line width
+
+The `size =` argument is used to control the size of points, whereas the `linewidth =` argument is used to specify line thickness. Look at the following examples.
+
+In the next two panels we're using `geom_point()` with different sizes.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| results: hide
+#| label: fig-controlling_sizes1
+#| fig-cap: "Data point sizes can be adjusted."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point(size = 1) +
+  labs(title = "geom_point(size = 1)")
+```
+
+```{r}
+#| warning: false
+#| results: hide
+#| label: fig-controlling_sizes2
+#| fig-cap: "Data point sizes can be adjusted."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point(size = 3) +
+  labs(title = "geom_point(size = 3)")
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-controlling_sizes_py1
+#| fig-cap: "Data point sizes can be adjusted."
+
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+      geom_point(size = 1) +
+      labs(title = "geom_point(size = 1)"))
+      
+p.show()
+```
+
+```{python}
+#| results: hide
+#| label: fig-controlling_sizes_py2
+#| fig-cap: "Data point sizes can be adjusted."
+
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+      geom_point(size = 3) +
+      labs(title = "geom_point(size = 3)"))
+      
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-controlling_sizes_seaborn
+#| fig-cap: "Data point sizes can be adjusted."
+
+fig, axes = plt.subplots(1, 2, figsize = (12, 5), sharey = True)
+
+# p1: small points
+sns.scatterplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    s = 20,             # size of points (similar to size=1 in ggplot)
+    ax = axes[0]
+)
+axes[0].set_title("point size 20")
+
+# p2: larger points
+sns.scatterplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    s = 70,             # larger points (similar to size=3 in ggplot)
+    ax = axes[1]
+)
+axes[1].set_title("point size 70")
+
+plt.tight_layout()
+plt.show()
+```
+
+:::
+:::
+
+To illustrate the change in line width, we're using a line across the data.
+
+::: {.panel-tabset group="language"}
+## R
+
+To achieve this, we use a different geometry: `geom_smooth()`. The width of the line can be changed with the `linewidth =` argument.
+
+```{r}
+#| warning: false
+#| results: hide
+#| label: fig-controlling_linesize1
+#| fig-cap: "Line sizes can also be adjusted."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point() +
+  geom_smooth(linewidth = 1) +
+  labs(title = "geom_smooth(linewidth = 1)")
+```
+
+```{r}
+#| warning: false
+#| results: hide
+#| label: fig-controlling_linesize2
+#| fig-cap: "Line sizes can also be adjusted."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point() +
+  geom_smooth(linewidth = 3) +
+  labs(title = "geom_smooth(linewidth = 3)")
+```
+
+## Python
+
+To achieve this, we use a different geometry: `geom_smooth()`. The width of the line can be changed with the `size =` argument.
+
+```{python}
+#| results: hide
+#| label: fig-controlling_sizes_py3
+#| fig-cap: "Data point sizes can be adjusted."
+
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+      geom_point() +
+      geom_smooth(size = 1, colour = "blue") +
+      labs(title = "size = 1"))
+      
+p.show()
+```
+
+```{python}
+#| results: hide
+#| label: fig-controlling_sizes_py4
+#| fig-cap: "Data point sizes can be adjusted."
+
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+      geom_point() +
+      geom_smooth(size = 3, colour = "blue") +
+      labs(title = "size = 3"))
+      
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-controlling_linesize_seaborn1
+#| fig-cap: "Line sizes can also be adjusted."
+
+sns.regplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    scatter = True,
+    color = "black",
+    scatter_kws = {'s': 20},                      # point size
+    line_kws = {'color': 'blue', 'linewidth': 1}  # smooth line style
+)
+
+plt.title("size = 1")
+plt.show()
+```
+
+```{python}
+#| results: hide
+#| label: fig-controlling_linesize_seaborn2
+#| fig-cap: "Line sizes can also be adjusted."
+
+sns.regplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    scatter = True,
+    color = "black",
+    scatter_kws = {'s': 20},                      # point size
+    line_kws = {'color': 'blue', 'linewidth': 3}  # smooth line style
+)
+
+plt.title("size = 3")
+plt.show()
+```
+
+:::
+:::
+
+::: {.callout-important}
+### Note on `geom_smooth()` in R vs Python
+
+When comparing **R** and **Python**, you may notice that the smooth line drawn by `geom_smooth()` looks different between **ggplot2** and **plotnine** (or **seaborn**).
+
+- In **R/ggplot2**, the default smoother is **LOESS** (*Locally Estimated Scatterplot Smoothing*).  
+- In **Python/plotnine**, the default is a **linear regression** (`method = "lm"`).  
+- In **Python/seaborn**, the default is also a **linear regression**, just like plotnine.
+
+This is why the default smooth lines look different, even though the function name is the same.
+:::
+
+## Facets
+
+Plots can split into multiple panels using *faceting*. This is a very useful tool to quickly see data distributions across different groups. We can split them into two types:
+
+1. `facet_wrap()` arranges a one-dimensional sequence of panels (based on a single splitting variable) to fit on one page
+2. `facet_grid()` allows you to form a matrix of rows and columns of panels (based on two different variables)
+
+This is best illustrated with an example. Let's say we want to split the weight vs hindfoot length scatter plot by the different sex groups, where the data belonging to each group has its own sub-panel. We can do this as follows.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-facetting
+#| fig-cap: "Facetting data splits it into mini-panels."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point() +
+  facet_wrap(facets = vars(sex))
+```
+
+Note the added code:
+
+```{r}
+#| eval: false 
+facet_wrap(facets = vars(sex))
+```
+
+We used `facet_wrap()`, because we're only splitting the data by a single variable: `sex`. We also need to tell the function which variable to split by, which we do in the `facets =` argument. Annoyingly - and for reasons unbeknownst to me - this requires the use of a *helper function*, `vars()`.
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-facetting_py
+#| fig-cap: "Facetting data splits it into mini-panels."
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+        geom_point() +
+        facet_wrap("~ sex"))
+
+p.show()
+```
+
+Note the added code:
+
+```{python}
+#| eval: false
+facet_wrap("~ sex")
+```
+
+We used `facet_wrap()`, because we're only splitting the data by a single variable: `sex`. We also need to tell the function which variable to split by, which we do by using the `~` symbol. I completely agree that this is a weird notation. Just read it as *split by...*
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-facetting_seaborn
+#| fig-cap: "Facetting data splits it into mini-panels."
+
+# Using relplot (shorthand for FacetGrid + scatterplot)
+p = sns.relplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    col = "sex",           # facet by sex
+    kind = "scatter"       # scatterplot
+)
+
+plt.show()
+```
+
+:::
+
+:::
+
+In the end, our data is split into three sub-panels - one for each group (if missing values are included). This makes it easy to see trends across the groups. Or, in this case, that there doesn't seem to be much difference in the distribution across the female and male observations.
+
+Lastly, we can also split by two variables.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+#| label: fig-facetgrid
+#| fig-cap: "Splitting into rows and columns."
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point() +
+  facet_grid(rows = vars(plot_id), cols = vars(sex))
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| label: fig-facetgrid_py
+#| fig-cap: "Splitting into rows and columns."
+p = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+        geom_point() +
+        facet_grid("plot_id ~ sex"))
+
+p.show()
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| results: hide
+#| label: fig-facetgrid_seaborn
+#| fig-cap: "Splitting into rows and columns."
+
+# Using relplot (shorthand for FacetGrid + scatterplot)
+p = sns.relplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    col = "sex",           # facet by sex
+    row = "plot_id",
+    kind = "scatter"       # scatterplot
+)
+
+plt.show()
+```
+
+:::
+
+:::
+
+Truly a terrible plot, because there are far too many groups in `plot_id`! We'll see how to deal with this in later chapters.
+
+## Saving plots
+
+Sometimes you might want to save a plot you created. This is pretty straightforward. Here, we are assuming that you have an `images` subfolder in your working directory.
+
+We save a plot in two steps:
+
+1. Assign the plot to an object
+2. Then use `ggsave()` to save this object
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| warning: false
+plot_r <- ggplot(data = surveys,
+       mapping = aes(x = weight, y = hindfoot_length)) +
+  geom_point() +
+  facet_wrap(facets = vars(sex))
+```
+
+```{r}
+#| warning: false
+ggsave(filename = "images/weight_vs_hindfootlength.png",
+       plot = plot_r,
+       width = 7,
+       height = 5,
+       units = "in")
+```
+
+## Python
+
+```{python}
+#| results: hide
+#| message: false
+plot_python = (ggplot(surveys, aes(x = "weight", y = "hindfoot_length")) +
+        geom_point() +
+        facet_wrap("~ sex"))
+```
+
+```{python}
+#| results: hide
+#| message: false
+(ggsave(plot_python,
+        filename = "images/weight_vs_hindfootlength.png",
+        units = "in",
+        width = 7,
+        height = 5,
+        dpi = 300))
+```
+
+::: {.callout-note collapse="true"}
+## Seaborn equivalent
+
+```{python}
+#| fig.show: hide
+
+# Create faceted scatterplot
+plot_seaborn = sns.relplot(
+    data = surveys,
+    x = "weight",
+    y = "hindfoot_length",
+    col = "sex",
+    kind = "scatter"
+)
+```
+
+
+```{python}
+plot_seaborn.savefig("images/weight_vs_hindfootlength_sns.png", dpi = 300, bbox_inches = "tight")
+```
+
+:::
+:::
+
+Here, I've added a few extra arguments to demonstrate what you can change. The only two things that are required are (1) the plot you want to save and (2) the name of the plot, including the filename extension.
+
+The other arguments, such as `units =`, `width =` and `height =` are used to define the units size (inches in this case) and corresponding width/height values. It's a good idea to add the `dpi =` argument (dots-per-inch) to specify the resolution, particularly when there are minimum resolution requirements when publishing!
+
+## Exercises
+
+### Plot colours: `parasites` {#sec-exr_plotcol_parasites}
+
+::: {.callout-exercise #ex-plotcol_parasites}
+#### Plot colours
+
+{{< level 1 >}}
+
+For this exercise we'll revisit the data from `data/parasites.csv`. We'll use the data to practise changing colours. After loading the data, do the following:
+
+Create the plot: create a violin plot for `fish_length` and colour by `lake` - include the data points, avoiding overlap.
+
+::: {.callout-answer collapse="true"}
+
+First we load the data.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| message: false
+parasites <- read_csv("data/parasites.csv")
+```
+
+
+## Python
+
+```{python}
+parasites = pd.read_csv("data/parasites.csv")
+```
+
+:::
+
+Now we can create the plot. We are creating a violin plot and colouring by `lake`. We're also asked to include the data points and to avoid overlap.
+
+::: {.panel-tabset group="language"}
+## R
+
+We can use `geom_violin()` to create a violin plot. We use the `aes()` to assign a colour (`fill =` because we're colouring a surface area) to our data. 
+
+Adding the data points could be done with `geom_point()` but then we'd end up with quite a bit of overlap. We could fix this using transparency (`alpha =`) but that would probably only solve part of the issue. We're better off using `geom_jitter()`, where we add a tiny bit of noise to the data to avoid overlap. We can set the width of this to make sure the jittered points are not too visually overbearing.
+
+```{r}
+ggplot(parasites, aes(x = lake, y = fish_length)) +
+  geom_violin(aes(fill = lake)) +
+  geom_jitter(width = 0.05)
+```
+
+## Python
+
+In `plotnine` we can use `geom_violin()` to create a violin plot. We use the `aes()` to assign a colour (`fill =` because we're colouring a surface area) to our data. 
+
+Adding the data points could be done with `geom_point()` but then we'd end up with quite a bit of overlap. We could fix this using transparency (`alpha =`) but that would probably only solve part of the issue. We're better off using `geom_jitter()`, where we add a tiny bit of noise to the data to avoid overlap. We can set the width of this to make sure the jittered points are not too visually overbearing.
+
+```{python}
+#| results: hide
+p = (ggplot(parasites, aes(x = "lake", y = "fish_length")) +
+  geom_violin(aes(fill = "lake")) +
+  geom_jitter(width = 0.05))
+  
+p.show()
+```
+
+:::
+
+:::
+:::
+
+### Facetting plots: `parasites` {#sec-exr_facets}
+
+::: {.callout-exercise #ex-facets}
+#### Facetting plots
+
+{{< level 1 >}}
+
+For this exercise we'll again use the data from `data/parasites.csv`.
+
+To practice creating sub panels using facetting, you'll be plotting `fish_length` against `parasite_count` for each `lake`.
+
+Which lake has the highest parasite count value? Eyeball this using the plots!
+
+::: {.callout-answer collapse="true"}
+We'll assume you still have the data loaded. We create the scatterplot, then facet it by `lake`.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+ggplot(parasites, aes(x = fish_length, y = parasite_count)) +
+  geom_point() +
+  facet_wrap(facets = vars(lake))
+```
+
+## Python
+
+```{python}
+p = (ggplot(parasites, aes(x = "fish_length", y = "parasite_count")) +
+  geom_point() +
+  facet_wrap("lake"))
+
+p.show()
+```
+:::
+
+Lake `C` has the highest parasite count (over 225).
+
+:::
+:::
+
+### Customising visuals: `parasites` {#sec-exr_custom_visuals}
+
+::::: {.callout-exercise #ex-custom_colours}
+#### Customising visuals
+
+{{< level 3 >}}
+
+For this exercise we'll again be using the data from `data/parasites.csv`.
+
+The goal of this exercise is to become more familiar with some of the customisations that are possible. You'll be focusing on adding titles and custom axis labels to a plot. You'll also practice customising the colour scheme of a plot.
+
+Recreate the following plot:
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| echo: false
+cb_palette   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
+                  "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+```{r}
+#| echo: false
+ggplot(data = parasites,
+       mapping = aes(x = lake, y = fish_length, fill = lake)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1) +
+  scale_fill_manual(values = cb_palette) +
+  labs(title = "Fish length by lake",
+       x = "Lake",
+       y = "Fish length (mm)")
+```
+
+
+## Python
+
+```{python}
+#| echo: false
+cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
+              "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+```
+
+```{python}
+#| echo: false
+p = (ggplot(parasites,
+       mapping = aes(x = "lake", y = "fish_length", fill = "lake")) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1, fill = "black") +
+  scale_fill_manual(values = cb_palette) +
+  labs(title = "Fish length by lake",
+       x = "Lake",
+       y = "Fish length (mm)"))
+       
+p.show()
+```
+
+
+:::
+
+You can refer to the [Clean, style & arrange](da4-11-cleaning-data.qmd) chapter for suggestions on how to do this!
+
+:::: {.callout-answer collapse="true"}
+
+
+::: {.panel-tabset group="language"}
+## R
+
+
+```{r}
+cb_palette   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
+                  "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+```{r}
+ggplot(data = parasites,
+       mapping = aes(x = lake, y = fish_length, fill = lake)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1) +
+  scale_fill_manual(values = cb_palette) +
+  labs(title = "Fish length by lake",
+       x = "Lake",
+       y = "Fish length (mm)")
+```
+
+## Python
+
+```{python}
+cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
+              "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+```
+
+```{python}
+p = (ggplot(parasites,
+       mapping = aes(x = "lake", y = "fish_length", fill = "lake")) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1, fill = "black") +
+  scale_fill_manual(values = cb_palette) +
+  labs(title = "Fish length by lake",
+       x = "Lake",
+       y = "Fish length (mm)"))
+
+p.show()
+```
+
+:::
+::::
+:::::
+
+## Summary
+
+::: {.callout-tip}
+#### Key points
+
+- We can build up plots layer-by-layer, adding multiple geometries in a single plot
+- Plot aesthetics can be changed based on data or manually defined
+- Colour, fill, transparency and jittering can all be useful ways to improve clarity
+- Plots can be subdivided into panels, called *facets*, which are based on a variable within the data. This allows easy visual comparison across groups.
+- We use functions like `ggsave()` to export plots to file
+:::

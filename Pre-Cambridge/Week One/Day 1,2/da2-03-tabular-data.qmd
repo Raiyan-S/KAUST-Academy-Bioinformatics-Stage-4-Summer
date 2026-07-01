@@ -1,0 +1,757 @@
+---
+title: Working with tabular data
+---
+
+::: {.callout-tip}
+#### Learning objectives
+
+- Understand the structure of tabular data.
+- Be able to read in tabular data.
+- Investigate properties of the data (e.g. types of variables, missing data).
+- Perform basic quality control checks.
+:::
+
+
+## Context
+In the previous section we dealt with single objects and vectors/lists. Here we expand towards tabular data, which can be seen as a set of these grouped together.
+
+## Tabular data {#tabular-data}
+Tables are organised in columns (vertical) and rows (horizontal). An example of a tabular data set is given in @fig-tabular_data.
+
+There, each **column** contains a variable (a thing that we've measured). Each **row** is a unique observation. 
+
+![An example of tabular data](images/tabular_data.png){#fig-tabular_data}
+
+## Working with data
+
+Tabular data sets are often created in spreadsheet programmes, such as Excel. These programmes are actually very well-suited, since they make it easy to enter data and keep an overview. When it comes to *analysing* these data, we're better off using coding - that way we can keep track of our analysis.
+
+The default Excel format is not great, since it's a propriety format and not natively readable by other computer programmes. Good alternatives are `.csv` (comma-separated values) files or `.tsv` (tab-separated values) files.
+
+For the next few sections we'll be using the `surveys.csv` data set (which you should now have in your `data-analysis/data` sub folder).
+
+We'll read in these data now. Some of the functions we use are not available natively, so we need to load some additional packages.
+
+::: {.panel-tabset group="language"}
+## R
+If you haven't done so already, make sure to load the `tidyverse` package:
+
+```{r}
+#| message: false
+library(tidyverse)
+```
+
+Next, we read in the file using the `read_csv()` function from `tidyverse`. Note that there is also a `read.csv()` function, but that one behaves slightly differently, so ensure you use the correct function name!
+
+```{r}
+read_csv("data/surveys.csv")
+```
+
+
+
+## Python
+
+We'll be using the `read_csv()` function from `pandas`, so make sure to load this module first.
+
+```{python}
+import pandas as pd
+```
+
+From hereon, when using tabular data, we'll be using the `pandas` package. We will cover its idiosyncrasies as and when we encounter them, but there are two general concepts to be aware of at this stage.
+
+::: {.callout-important}
+## Views versus copies
+
+When you select parts of a table in `pandas` you don't get a completely new object, but you get a *view* of the original data. This is great when you're just inspecting or viewing the data. 
+
+However, if you're making changes to the object that you've stored the table in (in our case `surveys`) then you might want to save these changes in a new object. If you want to do this, you create a *copy* of the data using the `.copy()` method.
+
+Which one you use is dependent on what you're trying to achieve. Don't worry - we'll be explicit when we need to make copies!
+
+:::
+
+::: {.callout-important}
+## Methods versus attributes
+
+When interacting with `pandas` tables (called DataFrames) we often use methods and attributes. The difference between the two can appear a bit subtle, so we illustrate the difference below.
+
+* *Methods* are functions that belong to an object. They are always used with parentheses, because they *do* something (e.g. `surveys.head()` gives the first few rows of the `surveys` object).
+* *Attributes* are properties of an object and are accessed *without* parentheses. They describe the object (e.g. `surveys.shape` returns the dimensions of `surveys`).
+
+:::
+
+Right, with that out of the way we can read in the data:
+
+```{python}
+pd.read_csv("data/surveys.csv")
+```
+
+:::
+
+This actually spits out quite a bit of information onto the screen! This is because we've not assigned the output of reading in the file to an object. As such, we can't work with the data yet. So, we'll have to fix this. I've done this on purpose, of course, to show that the command itself works.
+
+It is always good practice to run commands like this without assigning things. That way you can double-check what gets stored into an object! We'll save the data into an object called `surveys`.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+#| message: false
+surveys <- read_csv("data/surveys.csv")
+```
+
+
+## Python
+
+```{python}
+surveys = pd.read_csv("data/surveys.csv")
+```
+
+:::
+
+
+::: {.callout-note}
+## Reading in different types of data
+
+There are many different functions available to read in various data formats. Below are some of the most common ones.
+
+::: {.panel-tabset group="language"}
+## R
+
+The `readr` package (part of `tidyverse`) has several functions to read data in different formats.
+
+* `read_csv()` - for comma separated values
+* `read_tsv()` - for tab separated values
+* `read_csv2()` - for CSV files exported from non-English spreadsheet programs that use the semi-colon ; as a separator and a comma , as the decimal place.
+* `read_table()` - to read data where each column is separated by one or more spaces.
+* `read_delim()` - a flexible function that allows you to define your own delimiter.
+
+These functions have equivalents in base R (the default installation of R), which you can also use. They are very similarly named, for example: `read.csv()` and `read.table()` (notice the `.` instead of `_` in the function name). However, they have different default options, so pay attention to which one you use!
+
+## Python
+
+Python's `pd.read_csv()` function from `pandas` can read in many different types of (tabular) data. The way it recognises the different formats is by specifying the separator:
+
+* `pd.read_csv()` - for comma separated values
+* `pd.read_csv(file.tsv, sep = "\t")` - for tab separated values
+* `pd.read_csv(file.csv, sep = ";")` - for CSV files exported from non-English spreadsheet programs that use the semi-colon ; as a separator and a comma , as the decimal place.
+* `pd.read_table(file.txt)` - for general delimited text files and equivalent to `pd.read_csv()` with a default delimiter of `\t` (tab)
+:::
+:::
+
+## Table structure
+
+Now that we've read in the `surveys` data set, we can start exploring it a bit more. It's quite a substantial data set, with `r surveys |> ncol()` columns and `r surveys |> nrow()` rows.
+
+### Getting the first few rows
+
+A good starting point is to get a snippet of the data. We can use the `head()` function to get the first few rows of the table.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+head(surveys)
+```
+
+## Python
+
+```{python}
+surveys.head()
+```
+
+:::
+
+### Understanding overall structure
+
+It's also useful to have a bit of an overview of the overall structure of the table. This may seems trivial with smaller data sets, but the bigger the data set, the harder this can become!
+
+::: {.panel-tabset group="language"}
+## R
+
+If we are just interested in finding out which columns we have, we can use:
+
+```{r}
+colnames(surveys)
+```
+
+However, sometimes we want more detailed information. We can do this as follows:
+
+```{r}
+str(surveys)
+```
+
+## Python
+
+If we are just interested in finding out which columns we have, we can use:
+
+```{python}
+surveys.columns
+```
+
+However, sometimes we want more detailed information. We can do this as follows:
+
+```{python}
+surveys.info()
+```
+
+:::
+
+This gives quite a bit of information, but overall it's quite straightforward: we can see the number of rows and column and we have information on the type of data that is contained in each column.
+
+
+### Summary values
+
+Lastly, we can get some more information by creating some summary statistics.
+
+This can be quite useful to quickly check if there are any strange values in your data. For example, you might have expectations on what is a plausible `weight` value, so if there are typos or errors (e.g. `weight = 0`), they will quickly show up.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+summary(surveys)
+```
+
+
+## Python
+
+```{python}
+surveys.describe()
+```
+
+:::
+
+## Basic subsetting of data
+
+Although we'll go into more detail on how to select portions of a larger data set, we'll briefly cover some very basic subsetting techniques here - just to get us going.
+
+### Selecting columns
+
+We saw that there are 9 different columns in our data set. One of them is `weight`, which holds weight measurements for different animal records.
+
+::: {.panel-tabset group="language"}
+## R
+
+We can easily select an individual column using the `$` symbol. We type the name of the object and then specify which column we're interested in:
+
+```{r}
+#| eval: false
+surveys$weight
+```
+
+
+## Python
+
+We can easily select an individual column in a `pandas` DataFrame using the `.` notation. We type the name of the object and then specify which column we're interested in:
+
+```{python}
+surveys.weight
+```
+
+:::
+
+### Subsetting rows and columns {#subset_rc}
+
+We can subset specific rows and columns using the square bracket `[ ]` notation. The way this is ordered is `[rows, columns]`.
+
+We can divide the way we extract the data into two methods: based on their label/name in the table (**label-based** subsetting) or based on their numerical index (**index-based** subsetting).
+
+::: {.panel-tabset group="language"}
+## R
+
+Here, we are asking to return *all* the rows for the `species_id` column (its label). Note the comma before the `"species_id"` notation. The blank *before* the comma indicates that we're selecting all the rows.
+
+```{r}
+surveys[ , "species_id"]
+```
+
+We can also select a subset of rows for this column, for example the first 3 rows:
+
+```{r}
+surveys[1:3, "species_id"]
+```
+
+## Python
+
+Here, we are asking to return *all* the rows for the `species_id` column. We use `.loc` to use label-based indexing. Note the `: ,` before the `"species_id"` notation. This tells Python to get all the rows.
+
+
+```{python}
+surveys.loc[: , "species_id"]
+```
+
+We can also select a subset of rows for this column. The `.loc` attribute uses label-based indexing, so it looks at the row and column names. When we're slicing rows with `.loc` the slices are **inclusive of the stop**. For example the first 3 rows:
+
+```{python}
+surveys.loc[0:2, "species_id"]
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## R
+
+Alternatively, we use index-based subsetting. Remember, this is based on the numerical position in the data set.
+
+Let's grab the first 3 rows, and columns 2 to 4:
+
+```{r}
+surveys[1:3, 2:4]
+```
+
+or rows 10 to 15, and columns 2, 6 and 8:
+
+```{r}
+surveys[10:15, c(2, 6, 8)]
+```
+
+## Python
+
+Alternatively, we use index-based subsetting with `.iloc`. Remember, this is based on the numerical position in the data set. Importantly, slicing with `.iloc` is **exclusive of the stop**. Yes, we know - it's terribly confusing that this is different from `.loc`!
+
+Let's grab the first 3 rows, and columns 2 to 4:
+
+```{python}
+surveys.iloc[0:3, 1:4]
+```
+
+or rows 10 to 15, and columns 2, 6 and 8:
+
+```{python}
+surveys.iloc[9:15, [1, 5, 7]]
+```
+
+Remember, Python's indexing is zero-based - so you have to be quite careful/accurate when you're after specific indexes! 
+:::
+
+## Saving
+
+Before we move on to the next section, we'll practice saving data to file. You might want to do this if you created new tables or subsetted your data and don't want to repeat that every single time you do your analysis.
+
+::: {.callout-warning}
+Remember: **never overwrite your raw data** but always keep this as a separate copy!
+:::
+
+::: {.panel-tabset group="language"}
+## R
+
+Let's create a practice data set to save, for example by taking the first 20 rows of our `surveys` data set and saving it in a file `surveys_snippet.csv`.
+
+```{r}
+surveys_snippet <- surveys[1:20, ]
+```
+
+We can now save this. We do this with the `write_csv()` function. 
+We need to tell it which data set to save (this comes first) and then tell it with the `file =` argument *where* we want to save it. Here, we're saving it in our `data/` folder, as a file called `surveys_snippet.csv`. The file extension `.csv` is important, so don't forget to add it!
+
+```{r}
+write_csv(surveys_snippet, file = "data/surveys_snippet.csv")
+```
+
+## Python
+
+Let's create a practice data set to save, for example by taking the first 20 rows of our `surveys` data set and saving it in a file `surveys_snippet.csv`.
+
+```{python}
+surveys_snippet = surveys.iloc[0:20, :]
+```
+
+We can now save this. We do this using `.to_csv`.
+
+We need to tell it which data set to save (this comes first) and then tell it *where* we want to save it. Here, we're saving it in our `data/` folder, as a file called `surveys_snippet.csv`. The file extension `.csv` is important, so don't forget to add it!
+
+We also include the `index = False` argument, so that the row numbers are not written to file.
+
+```{python}
+surveys_snippet.to_csv("data/surveys_snippet.csv", index = False)
+```
+
+:::
+
+::: {.callout-tip}
+## Data tip: quality control checks
+ 
+Whenever you read in your data, it's always good practice to do some quality checks. Here's a list of things to look out for:
+
+- Do you have the expected number of rows and columns?
+- Are your variables (columns) of the expected type? (e.g. numeric, character)
+- Is the range of numeric data within expected boundaries? For example: a column with months should go from 1 to 12; a column with human heights in cm should not have values below 30 or so; etc...
+- Do you have the expected number of unique values in categorical (character) variables?
+- Do you have missing values in the data, and were these imported correctly?
+
+The table below gives an overview of common functions, where `df` denotes a table with data, `col` is a column within that table and `x` denotes a simple collection of data.
+
+| Task                                | R function             | Python (`pandas`)                            |
+|-------------------------------------|------------------------|----------------------------------------------|
+| Structure of object                 | `str(df)`              | `df.info()`                                  |
+| Summary statistics                  | `summary(df)`          | `df.describe()`                              |
+| Number of rows                      | `nrow(df)`             | `df.shape[0]`                                |
+| Number of columns                   | `ncol(df)`             | `df.shape[1]`                                |
+| Number of elements in a vector      | `length(x)`            | `len(x)` or `x.size` (for arrays)            |
+| Unique values in a column           | `unique(df$col)`       | `df["col"].unique()`                         |
+| Count unique values                 | `length(unique(x))`    | `df["col"].nunique()`                        |
+| Missing values (logical)            | `is.na(x)`             | `df["col"].isna()`                           |
+| Count missing values                | `sum(is.na(x))`        | `df["col"].isna().sum()`                     |
+
+:::
+
+
+## Exercises
+
+### Data structure: `surveys` {#sec-exr_structure}
+
+::: {.callout-exercise #ex-structure}
+#### Data structure
+
+{{< level 1 >}}
+
+For this exercise we'll be using the data from `data/surveys.csv`. Read in the data and answer the following:
+
+1. How many rows are in `surveys`?
+2. How many columns are in `surveys`?
+3. How many unique values do we have in the `species_id` column?
+4. How many missing values are there in `weight` and `hindfoot_length`?
+
+::: {.callout-answer collapse="true"}
+
+First we load the data.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+surveys <- read_csv("data/surveys.csv")
+```
+
+## Python
+
+```{python}
+surveys = pd.read_csv("data/surveys.csv")
+```
+
+:::
+
+We can then answer the following questions:
+
+#### 1. How many rows are in `surveys`?
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+nrow(surveys)
+```
+
+
+## Python
+
+```{python}
+surveys.shape[0]
+```
+
+
+:::
+
+#### 2. How many columns are in `surveys`?
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+ncol(surveys)
+```
+
+## Python
+
+```{python}
+surveys.shape[1]
+```
+
+:::
+
+#### 3. How many unique values do we have in the `species_id` column?
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+unique(surveys$species_id)
+```
+
+This gives us the unique values, but doesn't count them. To do this we use the `length()` function:
+
+```{r}
+length(unique(surveys$species_id))
+```
+
+Note that one of the entries is `NA` - missing data. We can tell it's different, because it's not in quotes (`" "`). So, there are actually `r length(unique(surveys$species_id)) - 1` unique values in `species_id`!
+
+## Python
+
+```{python}
+surveys["species_id"].unique()
+```
+
+This gives us the unique values, but doesn't count them. We can use the `len()` function to count the number of items in the array:
+
+```{python}
+len(surveys["species_id"].unique())
+```
+
+Or we can use the `.nunique()` function to do this directly on the column:
+
+```{python}
+surveys["species_id"].nunique()
+```
+
+This gives a slightly different result! Why? Well, there are missing data in the `species_id` column, which get counted as an entry if we get the unique values. With the `.nunique()` function missing values are automatically ignored.
+:::
+
+#### 4. How many missing values are there in `weight` and `hindfoot_length`?
+
+::: {.panel-tabset group="language"}
+## R
+
+We can count the number of missing values, by asking how many times the value in the `weight` column is missing. The answer you get is either `TRUE` or `FALSE` and R counts `TRUE` as `1` and `FALSE` as `0`. This is why you can use the `sum()` function to tally the number of `TRUE` values.
+
+```{r}
+sum(is.na(surveys$weight))
+
+sum(is.na(surveys$hindfoot_length))
+```
+
+
+## Python
+
+```{python}
+surveys["weight"].isna().sum()
+surveys["hindfoot_length"].isna().sum()
+```
+
+:::
+
+:::
+:::
+
+### Subsetting data: `parasites` {#sec-exr_subsetting}
+
+::: {.callout-exercise #ex-subsetting}
+#### Subsetting data
+
+{{< level 2 >}}
+
+For this exercise we'll be using the data from `data/parasites.csv`. Please do the following:
+
+1. Load the data.
+2. Check the structure of the data. What column types do we have?
+3. Select the `lake` column. How many lakes are there?
+4. Select rows 12 to 29 of the `fish_length` column. Using code, what are the minimum and maximum values?
+
+::: {.callout-answer collapse="true"}
+#### 1. Load the data.
+
+First we load the data.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+parasites <- read_csv("data/parasites.csv")
+```
+
+
+## Python
+
+```{python}
+parasites = pd.read_csv("data/parasites.csv")
+```
+
+:::
+
+#### 2. Check the structure of the data.
+
+Now we can check the structure of the data.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+str(parasites)
+```
+
+## Python
+
+```{python}
+parasites.info()
+```
+
+:::
+
+We can see that we have 3 columns and 64 rows. The `parasite_count` column is numerical (an integer - whole numbers); the `lake' column is text and `fish_length` is numerical (continuous).
+
+#### 3. Select the `lake` column.
+
+Let's select the `lake` column.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+parasites$lake
+```
+
+We can check how many unique values there are:
+
+```{r}
+length(unique(parasites$lake))
+```
+
+We read that as follows: "in the `lake` column in `parasites` (`parasites$lake`), find the unique values (`unique()`) and count how many items there are (`length()`)."
+
+
+## Python
+
+We can define the column explicitly, using the `["column_name"]` notation.
+
+```{python}
+parasites["lake"]
+```
+
+Or just use the `.` notation.
+
+```{python}
+parasites.lake
+```
+
+We can then tally the number of unique values, using the `.nunique()` method:
+
+```{python}
+parasites["lake"].nunique()
+```
+
+:::
+
+#### 4. Select rows 12 to 29 of the `fish_length` column.
+
+We need to do two things: just select the `fish_length` column and then specifically rows 12 to 29.
+
+::: {.panel-tabset group="language"}
+## R
+
+We can use the `[ ]` notation to subset our data. This takes the order `[rows, columns]`.
+
+```{r}
+parasites[12:29, "fish_length"]
+```
+
+We can find the minimum and maximum values with:
+
+```{r}
+min(parasites[12:29, "fish_length"])
+```
+
+```{r}
+max(parasites[12:29, "fish_length"])
+```
+
+## Python
+
+We can use the `[ ]` notation to subset our data. This takes the order `[rows, columns]`.
+
+Remember that Python has zero-based indexing. Also remember that `.loc` is inclusive. So, if we want rows 12 to 29 (included), we need to select index `[11:28]`. We're using `.loc` because we are using label-based indexing (by selecting the `fish_length` column using it's name).
+
+```{python}
+parasites.loc[11:28, "fish_length"]
+```
+
+We can find the minimum and maximum values with:
+
+```{python}
+parasites.loc[11:28, "fish_length"].min()
+```
+
+```{python}
+parasites.loc[11:28, "fish_length"].max()
+```
+
+:::
+
+:::
+:::
+
+### Random sampling: `parasites` {#sec-exr_random_sampling}
+
+::::: {.callout-exercise #ex-random_sampling}
+#### Random sampling
+
+{{< level 3 >}}
+
+For this exercise we'll be using the data from `data/parasites.csv`.
+
+Using subsetting, select 10 random rows in the data - without manually selecting them!
+
+What happens if you repeatedly randomly sample?
+
+:::: {.callout-answer collapse="true"}
+
+We can do this as follows.
+
+::: {.panel-tabset group="language"}
+## R
+
+```{r}
+set.seed(123)  # optional, for reproducibility
+
+sample_rows <- sample(1:nrow(parasites), size = 10)  # pick 10 random row indices
+parasites_subset <- parasites[sample_rows, ]
+```
+
+We use the `sample()` function, to create a vector of random row numbers - based on the length of the `parasites` data set. We then use this to subset our data.
+
+This gives us the following subset of data:
+
+```{r}
+parasites_subset
+```
+
+::: {.callout-note}
+We are also using `set.seed(123)`. What this does is "set" the random number generator that R uses. This allows us to recreate output and provide reproducibility in the course materials. If we would not set it, then every time we create `sample_rows` it would pick 10 different random ones. 
+:::
+
+## Python
+
+Pandas has built-in random sampling, using the `.sample()` method.
+
+We need to give it three pieces of information:
+
+1. The data (`parasites`)
+2. The number of samples to take (`n = `)
+3. (optional) setting the random seed (`random_state = `)
+
+```{python}
+parasites_subset = parasites.sample(n = 10, random_state = 123)
+```
+
+```{python}
+parasites_subset.head()
+```
+
+::: {.callout-note}
+We are also using `random_state = 123`. What this does is "set" the random number generator that Python uses. This allows us to recreate output and provide reproducibility in the course materials. If we would not set it, then every time we create `parasites_subset` it would pick 10 different random rows. 
+:::
+:::
+::::
+:::::
+
+## Summary
+
+::: {.callout-tip}
+#### Key points
+
+- Tabular data is structured into columns (variables) and rows (observations)
+- Common data types include CSVs and TSVs - widely accessible formats where data are separated by commas or tabs
+- It is good practice to get insight into your data by examining the structure, creating summary statistics and checking for missing values
+- Basic subsetting allows us to quickly pull out certain variables or observations
+- Write modified tables to file, but always keep the original, raw, data intact!
+:::
