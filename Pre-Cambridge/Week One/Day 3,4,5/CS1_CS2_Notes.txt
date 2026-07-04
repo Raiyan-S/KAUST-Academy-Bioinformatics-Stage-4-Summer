@@ -2,17 +2,22 @@ Always rely on plots for assumptions
 
 shapiro and qq plot for normality.
 
-bartlett and levene for variance.
+Bartlett and levene for variance.
 
-one sample data: normality, if it's normal distribution use t-test (student) with mu, if not use Wilcoxon test with mu.
+One sample data: normality, if it's normal distribution use t-test (student) with mu, if not use Wilcoxon test with mu.
 
-two sample data: normality, variance if both samples are normal use bartlett else levene and if p-value is higher than 0.05 then t-test (student/Welch) with var.equal=TRUE, else Wilcoxon (aka Mann-Whitney) test with alternative = "two.sided".
+Two sample data: normality, variance if both samples are normal use bartlett else levene and if p-value is higher than 0.05 then t-test (student/Welch) with var.equal=TRUE, else Wilcoxon (aka Mann-Whitney) test with alternative = "two.sided".
 
-paired sample data: normality (the differences should be compared), no need to do bartlett or levene variance, if normal use t-test (student) with paired=TRUE, [NOT ELSE CHECK AGAIN] Wilcoxon test alternative = "two.sided" + paired = TRUE.
-
+Paired sample data: normality (the differences should be compared), no need to do bartlett or levene variance, if normal use t-test (student) with paired=TRUE, [NOT ELSE CHECK AGAIN] Wilcoxon test alternative = "two.sided" + paired = TRUE.
 
 ANOVA: normality [using lm, residuals, then shapiro function. Or better, use ggResidpanel library resid_panel function(lm, plots = c("resid", "qq", "ls", "cookd"),smoother = TRUE)], variance if both samples are normal use bartlett else levene and if p-value is higher than 0.05 then ANOVA [anova(lm)], else ANOVA Welch with var.equal = FALSE.
 If normality is not good yet variance is significant, use Kruskal-Wallis.
 ANOVA gives us a big picture and does not tell us how each group differs from each other. We use Tukey [tukey_hsd(lm)] to get it but we can only use it after initial ANOVA rejected the null hypothesis (meaning at least one group mean is different).
 
 Kruskal-Wallis: Same normality and variance process, use kruskal.test and use Dunn’s test (equivalent of Tukey’s) to get the comparisons.
+
+Linear regression with grouped data: 1 continuous response, one or more predictors, with at least one continuous predictor (and possibly categorical group variables).
+Two-way ANOVA: 1 continuous response, 2 categorical predictors.
+
+If the difference between two AIC scores is greater than 2, then the model with the smallest AIC score is more supported than the model with the higher AIC score.
+If the difference between the two models’ AIC scores is less than 2 then both models are equally well supported.
