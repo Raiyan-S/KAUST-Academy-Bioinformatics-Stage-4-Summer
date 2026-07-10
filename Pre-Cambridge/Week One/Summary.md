@@ -723,3 +723,6 @@ total_obs_needed <- ceiling(u_df + lm_power$v + 1)
 message("Total observations needed for 80% power: ", total_obs_needed)
 # Total observations needed for 80% power: 48
 ```
+# URLs
+- https://cambiotraining.github.io/data-analysis-in-r-and-python/
+- https://cambiotraining.github.io/corestats/
