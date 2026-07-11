@@ -151,82 +151,68 @@ Managing multi-step pipelines requires **Automated Workflows** like **Nextflow**
 *   You can utilize advanced configuration profiles (e.g., `-profile singularity`) to enforce container use. By altering a `nextflow.config` file, users dynamically alter resource allocations using selectors like `withLabel` (e.g., matching a high-memory task to a specific HPC queue).
 *   Most nf-core pipelines require a **Samplesheet** (a CSV file) to pass experimental metadata and file paths into the pipeline.
 
-### R-Only Code Example: Dynamic Configuration & Samplesheet Creation
-This R script mimics the steps necessary to dynamically build a Nextflow samplesheet and configuration file directly from R, which is a highly recommended automation practice.
+**Shell Code Example:**
+```bash
+# 1. Package Managers (Mamba)
+# Create an isolated environment installing fastqc and multiqc from bio-specific channels
+mamba create -n qc -c conda-forge -c bioconda fastqc=0.12.1 multiqc=1.21
+mamba activate qc
 
-```r
-# Day 3: Software Pipelines in R
-# Automating the creation of a Nextflow samplesheet and a custom config file
+# Export the environment for reproducibility
+mamba env export > env.yaml
 
-# 1. Dynamically Create a Samplesheet for nf-core pipelines
-generate_nextflow_samplesheet <- function(reads_directory, output_csv) {
-  # Find all fastq.gz files in the target directory
-  # Simulated file list
-  fastq_files <- c("Sample1_R1.fastq.gz", "Sample1_R2.fastq.gz", 
-                   "Sample2_R1.fastq.gz", "Sample2_R2.fastq.gz")
-  
-  # Extract unique sample names
-  sample_names <- unique(gsub("_R.fastq.gz", "", fastq_files))
-  
-  # Initialize empty data frame conforming to nf-core standard
-  samplesheet <- data.frame(
-    sample = character(),
-    fastq_1 = character(),
-    fastq_2 = character(),
-    strandedness = character(),
-    stringsAsFactors = FALSE
-  )
-  
-  # Populate the dataframe
-  for (s in sample_names) {
-    fq1 <- file.path(reads_directory, paste0(s, "_R1.fastq.gz"))
-    fq2 <- file.path(reads_directory, paste0(s, "_R2.fastq.gz"))
-    
-    samplesheet <- rbind(samplesheet, data.frame(
-      sample = s,
-      fastq_1 = fq1,
-      fastq_2 = fq2,
-      strandedness = "auto"
-    ))
-  }
-  
-  # Write to CSV without row names
-  write.csv(samplesheet, file = output_csv, row.names = FALSE, quote = FALSE)
-  message("Samplesheet successfully written to ", output_csv)
+# 2. Container Virtualisation (Singularity)
+# Download a pre-built bioinformatics container (e.g., SeqKit)
+singularity pull https://depot.galaxyproject.org/singularity/seqkit:2.8.2--h9ee0642_0
+
+# Run a command securely inside the container, binding a custom filesystem path
+singularity run --bind /scratch/robin/awesomeproject:/scratch/robin/awesomeproject \
+    seqkit-2.8.2.sif seqkit stats reads/*.fastq.gz
+
+# 3. Pipelines & Automated Workflows (Nextflow)
+# Create a sample sheet for nf-core dynamically using bash
+echo "sample,fastq_1,fastq_2" > samplesheet.csv
+ls reads/*_1.fastq.gz | awk -F"/" '{print $2}' | awk -F"_1" '{print $1",""reads/"$0",reads/"$1"_2.fastq.gz"}' >> samplesheet.csv
+
+# Set up a persistent terminal session for long-running workflows
+tmux new -s nf_run
+
+# Create an advanced custom HPC configuration file for Nextflow
+cat << 'EOF' > custom_hpc.config
+process {
+    executor = 'slurm'
+    queue = 'normal'
+    withLabel: 'process_high_memory' {
+        queue = 'highmem'
+        memory = 200.GB
+    }
 }
-
-# Execute function to build samplesheet
-generate_nextflow_samplesheet(reads_directory = "/data/reads", output_csv = "samplesheet.csv")
-
-# 2. Dynamically Generate Advanced Nextflow Configuration File
-generate_nf_config <- function(config_file, max_cpus = 8, max_mem = "32.GB") {
-  config_content <- paste0(
-    "// Advanced Nextflow Configuration generated via R\n",
-    "process {\n",
-    "  executor = 'slurm'\n",
-    "  queue = 'normal'\n",
-    "  withLabel: process_high_memory {\n",
-    "    queue = 'highmem'\n",
-    "    memory = '", max_mem, "'\n",
-    "  }\n",
-    "}\n",
-    "singularity {\n",
-    "  enabled = true\n",
-    "  autoMounts = true\n",
-    "  cacheDir = '/data/.singularity_cache'\n",
-    "}\n",
-    "executor {\n",
-    "  queueSize = 50\n",
-    "  submitRateLimit = '10 sec'\n",
-    "}\n"
-  )
-  
-  writeLines(config_content, con = config_file)
-  message("Nextflow config written to ", config_file)
+executor {
+    queueSize = 50
 }
+singularity {
+    enabled = true
+    autoMounts = true
+    cacheDir = '/data/participant/.nextflow-singularity-cache'
+}
+EOF
+#
 
-# Execute function
-generate_nf_config("custom_hpc.config", max_cpus = 16, max_mem = "64.GB")
+# Launch an nf-core workflow using singularity, resume capabilities, and our custom HPC config
+nextflow run nf-core/demo -revision "1.0.0" \
+    -profile singularity \
+    --input samplesheet.csv \
+    --outdir results \
+    --fasta genome/genome.fasta \
+    -c custom_hpc.config \
+    -resume
+
+# Detach from tmux to leave the job running (Ctrl+B, then D)
+# Later, reattach to the session:
+tmux attach -t nf_run
+
+# Clean up cached Nextflow intermediate files to free up disk space
+nextflow clean -force
 ```
 
 ---
@@ -246,95 +232,81 @@ High-Performance Computing (HPC) clusters consist of **Login nodes** (for editin
 *   **Job Arrays:** Using `#SBATCH -a 1-10` submits 10 independent jobs. SLURM provides the `$SLURM_ARRAY_TASK_ID` variable, allowing a single script to process multiple files in parallel.
 *   **Job Dependencies:** Advanced pipelines chain tasks together. Using `--dependency=afterok:JOBID` ensures a job only starts if a previous task finished successfully. Alternatively, `--dependency=afternotok:JOBID` can restart failed checkpoints.
 
-### R-Only Code Example: Interacting with SLURM arrays and Dependencies
-This R script demonstrates how to generate a SLURM job array script and parse parameters directly inside R, simulating a robust job orchestration mechanism commonly used when bridging statistical programming (R) with HPC administration (SLURM).
+**Shell Code Example:**
+```bash
+# 1. Remote Work & HPC Introduction
+# Connect to the HPC using SSH
+ssh username@login.hpc.cam.ac.uk
 
-```r
-# Day 4 & 5: HPC Management using R
-# Generating SLURM array submission scripts and handling dependencies
+# Check available resources on the login node (Do not run heavy jobs here!)
+free -h
+nproc --all
 
-# 1. Creating a parameter grid to run across an HPC Job Array
-params_df <- expand.grid(
-  learning_rate = c(0.01, 0.05, 0.1),
-  iterations = c(1000, 5000)
-)
-params_df$task_id <- 1:nrow(params_df)
+# 2. Software Management via Modules
+# Search for and load pre-installed cluster software
+module avail bowtie2
+module load bowtie2/2.5.0
 
-# Write parameters to a CSV file to be read by the array tasks
-write.csv(params_df, "simulation_params.csv", row.names = FALSE)
+# 3. Job Parallelisation (Arrays) and SLURM Scheduler
+# Create a parallel job array script to parse parameters and map reads dynamically
+cat << 'EOF' > parallel_mapping.sh
+#!/bin/bash
+#SBATCH -J parallel_mapping
+#SBATCH -D /home/username/rds/hpc-work/
+#SBATCH -o job_logs/mapping_%a.log
+#SBATCH -c 4
+#SBATCH --mem=8G
+#SBATCH -t 02:00:00
+#SBATCH -a 2-9
 
-# 2. Generate a SLURM array script from R
-generate_slurm_array_script <- function(script_name, total_tasks) {
-  slurm_header <- c(
-    "#!/bin/bash",
-    paste0("#SBATCH --job-name=R_Simulation_Array"),
-    paste0("#SBATCH -o logs/sim_array_%a.out"),
-    paste0("#SBATCH -e logs/sim_array_%a.err"),
-    paste0("#SBATCH --time=02:00:00"),
-    paste0("#SBATCH -p normal"),
-    paste0("#SBATCH -c 2"),
-    paste0("#SBATCH --mem=8G"),
-    paste0("#SBATCH -a 1-", total_tasks),
-    "",
-    "module load R/4.2.0",
-    "echo \"Starting array task ID: $SLURM_ARRAY_TASK_ID\"",
-    "",
-    "# In practice, Rscript would parse the SLURM_ARRAY_TASK_ID directly",
-    "Rscript run_model.R $SLURM_ARRAY_TASK_ID simulation_params.csv"
-  )
-  
-  writeLines(slurm_header, con = script_name)
-  message("SLURM array script written to: ", script_name)
-}
+# Load software environment securely on compute nodes
+source $CONDA_PREFIX/etc/profile.d/mamba.sh
+mamba activate bioinformatics
 
-generate_slurm_array_script("submit_array.sh", total_tasks = nrow(params_df))
+# Use the array ID to read the corresponding line from a CSV file
+# Example: line 2 fetches parameters for the 1st sample 
+SAMPLE_INFO=$(head -n $SLURM_ARRAY_TASK_ID data/samplesheet.csv | tail -n 1)
+SAMPLE_NAME=$(echo $SAMPLE_INFO | cut -d ',' -f 1)
+READ1=$(echo $SAMPLE_INFO | cut -d ',' -f 2)
+READ2=$(echo $SAMPLE_INFO | cut -d ',' -f 3)
 
-# 3. Simulate R parsing the SLURM_ARRAY_TASK_ID inside the compute node
-# (This would be inside the 'run_model.R' script)
-run_model_on_hpc <- function() {
-  # Fetch task ID from environment (Simulated here as "3")
-  task_id_str <- Sys.getenv("SLURM_ARRAY_TASK_ID")
-  
-  if (task_id_str == "") {
-    warning("Not running under SLURM array, defaulting to task 1")
-    task_id_str <- "1"
-  }
-  
-  task_id <- as.integer(task_id_str)
-  
-  # Load parameters
-  all_params <- read.csv("simulation_params.csv")
-  
-  # Isolate specific parameters for THIS task
-  my_params <- all_params[all_params$task_id == task_id, ]
-  
-  message("Running model with learning_rate: ", my_params$learning_rate, 
-          " and iterations: ", my_params$iterations)
-  
-  # Dummy model execution
-  Sys.sleep(2)
-  message("Task ", task_id, " completed successfully.")
-}
+echo "Running mapping using $SLURM_CPUS_PER_TASK CPUs for $SAMPLE_NAME"
+bowtie2 -p $SLURM_CPUS_PER_TASK -x genome_index -1 $READ1 -2 $READ2 -S results/${SAMPLE_NAME}.sam
+EOF
+#
 
-# Run the model logic
-run_model_on_hpc()
+# 4. Job Dependencies
+# Submit the array and capture the Job ID cleanly using --parsable
+ARRAY_JOB_ID=$(sbatch --parsable parallel_mapping.sh)
 
-# 4. Automating Job submission and dependency chaining via R
-# We can use R to submit the array and hold a dependent job
-submit_with_dependency <- function(array_script, dependent_script) {
-  # Submit array and capture JOBID (using --parsable to only return the ID)
-  submit_cmd <- paste("sbatch", "--parsable", array_script)
-  
-  # Execute the system command (simulated here)
-  # job_id <- system(submit_cmd, intern = TRUE)
-  job_id <- "99999" # Dummy ID for documentation
-  
-  # Chain the next script
-  dep_cmd <- sprintf("sbatch --dependency=afterok:%s %s", job_id, dependent_script)
-  message("Executing: ", dep_cmd)
-  
-  # system(dep_cmd)
-}
+# Create a summary script that strictly depends on the array finishing successfully
+cat << 'EOF' > summarize_mapping.sh
+#!/bin/bash
+#SBATCH -J summary
+#SBATCH -o job_logs/summary.log
+#SBATCH -c 1
+
+echo "All mapping tasks have completed successfully. Summarizing BAM files."
+multiqc results/
+EOF
+#
+
+# Submit the dependent job
+sbatch --dependency=afterok:$ARRAY_JOB_ID summarize_mapping.sh
+
+# 5. Monitoring
+# Check the queue for running and pending jobs
+squeue -u username
+
+# Check job efficiency (e.g., memory and CPU usage) after a job finishes
+seff $ARRAY_JOB_ID
+
+# Cancel jobs if an error was made
+scancel $ARRAY_JOB_ID
+
+# 6. File Transfer
+# Synchronize output results from the HPC back to the local computer
+rsync -auvh --progress username@login.hpc.cam.ac.uk:/home/username/rds/hpc-work/results/ /path/to/local/results/
 ```
 # URLs
 - https://cambiotraining.github.io/intro-ngs/setup.html
