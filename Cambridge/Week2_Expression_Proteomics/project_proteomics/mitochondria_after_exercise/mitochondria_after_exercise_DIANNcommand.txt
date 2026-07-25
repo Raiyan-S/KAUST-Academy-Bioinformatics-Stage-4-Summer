@@ -1,0 +1,53 @@
+C:\DIA-NN\2.2.0\diann.exe `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_1A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_1B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_3A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_3B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_4A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_4B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_5A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_5B_20210819011350.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_6A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_6B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_7A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_7B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_8A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_8B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_10B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_11A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_11B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_13A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_13B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_15A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_15B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_16A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_16B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_17A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_17B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_18A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_18B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_20A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_20B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_21A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_21B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_22A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_22B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_23A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_23B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_24A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_24B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_25A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_25B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_26A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_26B.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_27A.mzML `
+--f D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mzML\210811_Nikeisha_NC-2843_DIA_27B.mzML `
+--outD:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mitochondria_after_exercise_proteomics.parquet `
+--qvalue 0.01 --matrices --temp D:\Simran\projects\teaching\DIAprot\DIANNtemp `
+--out-lib D:\Simran\projects\teaching\DIAprot\KAUST_extra_datasets\mitochondria_after_exercise_proteomics\mitochondria_after_exercise_proteomics_speclib.parquet `
+--lib --threads 10 --verbose 1 `
+--gen-spec-lib --predictor --cont-quant-exclude Cont_ `
+--fasta D:\Simran\projects\teaching\DIAprot\rawdata\FASTA_speclib\0602_Universal_Contaminants_no_FBS_source.fasta `
+--fasta D:\Simran\projects\teaching\DIAprot\rawdata\FASTA_speclib\UP000005640_9606.fasta `
+--fasta-search --min-fr-mz 200 --max-fr-mz 1800 --met-excision --min-pep-len 7 --max-pep-len 30 --min-pr-mz 300 --max-pr-mz 1800 --min-pr-charge 1 --max-pr-charge 4 `
+--cut K*,R* --missed-cleavages 1 --unimod4 --window 7 --mass-acc 12 --mass-acc-ms1 20 --reanalyse --rt-profiling --high-acc
