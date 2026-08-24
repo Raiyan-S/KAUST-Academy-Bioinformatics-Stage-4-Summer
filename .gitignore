@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# Environments & caches
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+.Ripynb_checkpoints/
+
+# macOS / editor cruft
+.DS_Store
+._*
+*~
+
+# ---------------------------------------------------------------------------
+# Week 4 metagenomics — large data that exceeds GitHub's 100 MB file limit
+# ---------------------------------------------------------------------------
+
+# SILVA reference training set (~132 MB; re-downloadable from the SILVA project)
+Cambridge/Week4_Metagenomics/project/silva_nr99_*.fa.gz
+
+# Raw MicrobiomeHD cohort result folders — keep ONLY the cohort the CDI/FMT
+# analysis actually uses (cdi_youngster_results); ignore the other 32 cohorts.
+# (All of cdi_youngster_results' files are individually under GitHub's 100 MB
+# limit, so the whole folder can be committed.)
+Cambridge/Week4_Metagenomics/project/*_results/
+!Cambridge/Week4_Metagenomics/project/cdi_youngster_results/
+!Cambridge/Week4_Metagenomics/project/cdi_youngster_results/**
